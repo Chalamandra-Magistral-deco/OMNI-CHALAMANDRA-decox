@@ -37,7 +37,7 @@ User Input (4 visual points)
 ↓
 Geometric Invariants (Cross Ratio + Stability Signals)
 ↓
-Multi-Agent Debate (Gemini 3 Pro)
+Multi-Agent Debate (Gemini 3.8 Flash)
 Scientist | Philosopher | Psychologist | Historian | Futurist
 ↓
 Shadow Governance Audit (GEORGE Protocol)
@@ -126,7 +126,7 @@ Uncertainty is surfaced by design.
 
 ## 🧩 Built With
 
-- Gemini 3 Pro  
+- Gemini 3.8 Flash
 - TypeScript / JavaScript  
 - Structured JSON schemas  
 - Canvas & WebAudio API  

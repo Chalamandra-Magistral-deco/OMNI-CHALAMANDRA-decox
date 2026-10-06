@@ -1,5 +1,7 @@
 # Environment
 .env
+.env.*
+!.env.example
 
 # Node
 node_modules/
@@ -15,3 +17,6 @@ __pycache__/
 
 # Logs
 *.log
+
+# Vercel local metadata
+.vercel/

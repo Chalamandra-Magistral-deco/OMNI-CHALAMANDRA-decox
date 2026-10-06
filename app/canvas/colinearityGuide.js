@@ -8,6 +8,34 @@
  * @param {Array} points - Array of {x, y} coordinates.
  * @returns {Object} Alignment metrics and system status.
  */
+export function projectPointsToBaseline(points = []) {
+  if (!Array.isArray(points) || points.length < 2) {
+    throw new Error("Projection requires at least two points");
+  }
+
+  const first = points[0];
+  const last = points[points.length - 1];
+
+  const dx = last.x - first.x;
+  const dy = last.y - first.y;
+  const lengthSquared = dx * dx + dy * dy;
+
+  if (!Number.isFinite(lengthSquared) || lengthSquared === 0) {
+    throw new Error("Cannot project points onto a degenerate baseline");
+  }
+
+  return points.map((point) => {
+    const t =
+      ((point.x - first.x) * dx + (point.y - first.y) * dy) /
+      lengthSquared;
+
+    return {
+      x: first.x + t * dx,
+      y: first.y + t * dy
+    };
+  });
+}
+
 export function analyzeColinearity(points = []) {
   if (!Array.isArray(points) || points.length < 3) {
     return {

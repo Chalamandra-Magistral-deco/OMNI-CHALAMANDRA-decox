@@ -37,14 +37,13 @@ export function CanvasController(finalPayload) {
   -------------------------------------------------- */
   const {
     input_analysis,
-    debate,
+    authoritative_signals,
     chain_data
   } = finalPayload;
 
-  const output_signals = debate?.output_signals;
-  const crossRatio = input_analysis?.cross_ratio || 1.0;
-  const frequencyHz = output_signals?.frequency_hz || 432;
-  const geometryType = output_signals?.geometry || "STANDARD";
+  const crossRatio = authoritative_signals?.cross_ratio ?? input_analysis?.cross_ratio;
+  const frequencyHz = authoritative_signals?.frequency_hz;
+  const geometryType = authoritative_signals?.geometry_category;
 
   /* --------------------------------------------------
      3. GEOMETRIC PRE-PROCESSING

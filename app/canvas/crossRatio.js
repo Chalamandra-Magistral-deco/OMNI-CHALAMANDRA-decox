@@ -1,47 +1,73 @@
 /**
  * CROSS RATIO (R) — OMNI-CHALAMANDRA
- * Responsibility: Compute the anharmonic ratio as a stable geometric invariant.
+ *
+ * Responsibility:
+ * Compute the projective cross-ratio of four collinear points.
+ *
+ * Authority rule:
+ * - Points must be collinear.
+ * - The calculation preserves orientation/sign.
+ * - Non-collinear input is rejected instead of producing a
+ *   mathematically misleading projective invariant.
  */
 
 /**
- * Computes the cross ratio of four colinear points A, B, C, D
- * Formula: (AC / BC) / (AD / BD)
- * @returns {number} The projective invariant R.
+ * Computes the oriented cross-ratio of four collinear points A, B, C, D.
+ *
+ * Formula:
+ *
+ *   R = ((A-C) / (B-C)) / ((A-D) / (B-D))
+ *
+ * For arbitrary 2D collinear points, the coordinates are projected
+ * onto the dominant axis so orientation is preserved.
+ *
+ * @param {Array<{x:number,y:number}>} points
+ * @returns {number}
  */
 export function calculateCrossRatio(points) {
-  // Extract points from array structure for cleaner math
-  if (!points || points.length < 4) return 1.0;
+  if (!Array.isArray(points) || points.length < 4) {
+    throw new Error("Cross-ratio requires four points");
+  }
 
   const [A, B, C, D] = points;
 
-  try {
-    const AC = distance(A, C);
-    const BC = distance(B, C);
-    const AD = distance(A, D);
-    const BD = distance(B, D);
-
-    // Division by zero prevention for overlapping points (Singularity defense)
-    if (BC === 0 || AD === 0 || BD === 0) {
-      console.warn(">> MATH: Geometric singularity detected. Defaulting to 1.0");
-      return 1.0;
-    }
-
-    const ratio = (AC / BC) / (AD / BD);
-
-    // Log with high precision for the Shadow Auditor
-    console.log(`>> MATH: Invariant R synthesized: ${ratio.toFixed(6)}`);
-    return Number(ratio.toFixed(6));
-  } catch (e) {
-    console.error(">> MATH ERROR: Cross-ratio calculation failed.", e);
-    return 1.0;
+  if (![A, B, C, D].every(isFinitePoint)) {
+    throw new Error("Cross-ratio requires four finite 2D points");
   }
+
+  if (!areCollinear(A, B, C, D)) {
+    throw new Error("Cross-ratio requires four collinear points");
+  }
+
+  const axis = dominantAxis(A, B, C, D);
+
+  const a = A[axis];
+  const b = B[axis];
+  const c = C[axis];
+  const d = D[axis];
+
+  const denominator = (b - c) * (a - d);
+
+  if (denominator === 0) {
+    throw new Error("Cross-ratio singularity detected");
+  }
+
+  const ratio = ((a - c) * (b - d)) / denominator;
+
+  if (!Number.isFinite(ratio)) {
+    throw new Error("Cross-ratio produced a non-finite result");
+  }
+
+  console.log(`>> MATH: Oriented cross-ratio R: ${ratio.toFixed(6)}`);
+
+  return Number(ratio.toFixed(6));
 }
 
 /**
- * Categorizes the ratio for downstream logic (Visual/Audio/AI Persona)
- * Used by the Invariant Engine to signal the system state.
+ * Categorizes the ratio for downstream logic.
  */
 export function categorizeCrossRatio(R) {
+  if (!Number.isFinite(R)) return "INVALID";
   if (R < 0) return "PARADIGM_INVERSION";
   if (R < 0.618) return "COLLAPSE_RISK";
   if (R < 1.0) return "STABLE_COMPRESSION";
@@ -50,13 +76,49 @@ export function categorizeCrossRatio(R) {
   return "DISRUPTIVE_EXPANSION";
 }
 
-/* --------------------------------------------------
-   INTERNAL HELPERS
--------------------------------------------------- */
-
-function distance(p1, p2) {
-  return Math.sqrt(
-    Math.pow(p2.x - p1.x, 2) +
-    Math.pow(p2.y - p1.y, 2)
+function isFinitePoint(point) {
+  return (
+    point &&
+    Number.isFinite(point.x) &&
+    Number.isFinite(point.y)
   );
+}
+
+function dominantAxis(A, B, C, D) {
+  const dx = Math.max(
+    Math.abs(A.x - B.x),
+    Math.abs(A.x - C.x),
+    Math.abs(A.x - D.x)
+  );
+
+  const dy = Math.max(
+    Math.abs(A.y - B.y),
+    Math.abs(A.y - C.y),
+    Math.abs(A.y - D.y)
+  );
+
+  return dx >= dy ? "x" : "y";
+}
+
+function areCollinear(A, B, C, D) {
+  const area = (B.x - A.x) * (C.y - A.y)
+             - (B.y - A.y) * (C.x - A.x);
+
+  const area2 = (B.x - A.x) * (D.y - A.y)
+              - (B.y - A.y) * (D.x - A.x);
+
+  const scale = Math.max(
+    1,
+    Math.abs(B.x - A.x),
+    Math.abs(B.y - A.y),
+    Math.abs(C.x - A.x),
+    Math.abs(C.y - A.y),
+    Math.abs(D.x - A.x),
+    Math.abs(D.y - A.y)
+  );
+
+  const tolerance = 1e-9 * scale * scale;
+
+  return Math.abs(area) <= tolerance &&
+         Math.abs(area2) <= tolerance;
 }

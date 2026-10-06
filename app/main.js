@@ -18,14 +18,19 @@ const statusIndicator = document.getElementById("status-indicator");
 
 canvas.addEventListener("click", async (e) => {
   if (points.length < 4) {
-    // Hide overlay on first click
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
+    // Hide overlay only after capturing the click coordinates.
+    // This prevents the layout shift from changing the coordinate frame.
     if (points.length === 0) {
       document.getElementById("canvas-overlay").style.display = "none";
     }
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
     points.push({ x, y });
 
     drawPoint(x, y);
@@ -43,8 +48,11 @@ async function runAnalysis() {
     const finalPayload = await orchestrateOMNI(points);
 
     // 2. Visual Theme & Audio Resonance
-    updateUITheme(finalPayload.debate.output_signals.geometry);
-    playFrequency(finalPayload.debate.output_signals.frequency_hz);
+    // Authoritative signals come from the deterministic Invariant Engine.
+    const authoritative = finalPayload.authoritative_signals;
+
+    updateUITheme(authoritative.geometry_category);
+    playFrequency(authoritative.frequency_hz);
 
     // 3. Render Mandala
     CanvasController(finalPayload);
@@ -88,8 +96,11 @@ function updateAgentUI(payload) {
   georgeP.style.color = payload.george_verdict.panic_triggered ? "#ff4400" : "#00ffaa";
 
   // Update Footer Data
-  document.getElementById("val-ratio").innerText = payload.input_analysis.cross_ratio.toFixed(6);
-  document.getElementById("val-freq").innerText = `${payload.debate.output_signals.frequency_hz}Hz`;
+  document.getElementById("val-ratio").innerText =
+    payload.authoritative_signals.cross_ratio.toFixed(6);
+
+  document.getElementById("val-freq").innerText =
+    `${payload.authoritative_signals.frequency_hz}Hz`;
   document.getElementById("val-hash").innerText = payload.chain_data.current_hash;
 }
 

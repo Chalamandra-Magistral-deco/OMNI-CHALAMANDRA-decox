@@ -19,8 +19,8 @@ export async function auditWithGeorge(debate, input) {
   const agentInsights = debate.agent_insights || {};
   const debateText = Object.values(agentInsights).join(" ").toLowerCase();
 
-  // George's internal verdict from the Target Model (Gemini)
-  const internalVerdict = debate.george_verdict || {};
+  // George is an external audit layer.
+  // Gemini does not supply George's verdict or hallucination score.
 
   let panicTriggered = false;
   let driftScore = 0;
@@ -46,10 +46,8 @@ export async function auditWithGeorge(debate, input) {
 
   // RULE 3: External vs Internal Alignment
   // If the Target Model's internal George missed a high hallucination score
-  if (internalVerdict.hallucination_score > 0.7) {
-    driftScore += 0.5;
-    issues.push("High hallucination score detected in internal reasoning.");
-  }
+  // No model-supplied hallucination score is trusted.
+  // George derives drift only from deterministic inputs and narrative evidence.
 
   // Final Verdict Logic
   if (driftScore >= 0.7) {
@@ -70,7 +68,7 @@ export async function auditWithGeorge(debate, input) {
       drift_score: driftScore,
       glitch_intensity: Math.min(driftScore, 1.0),
       final_verdict: finalVerdict,
-      hallucination_score: internalVerdict.hallucination_score || driftScore
+      hallucination_score: driftScore
     },
     visual_signals: signals
   };

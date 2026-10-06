@@ -1,6 +1,6 @@
 /**
  * OMNI-CHALAMANDRA CORE PROMPT v3.5
- * Optimized for Gemini 3 Pro - Hackathon Edition
+ * Optimized for Gemini 3.8 Flash - Hackathon Edition
  */
 
 export function SYSTEM_PROMPT(crossRatio, computedValues, mandalaSeed = {}, hashChain = {}) {
@@ -8,10 +8,9 @@ export function SYSTEM_PROMPT(crossRatio, computedValues, mandalaSeed = {}, hash
 
   // Default values for safety during the live demo
   const signals = {
-    frequencyHz: computedValues.frequency_hz || 432,
-    coordinationIndex: computedValues.coordination_index || 0.5,
-    stabilityScore: computedValues.stability_score || 50,
-    geometryCategory: computedValues.geometry_category || "NEUTRAL"
+    frequencyHz: computedValues.frequency_hz ?? 432,
+    coordinationIndex: computedValues.coordination_index ?? 0.5,
+    geometryCategory: computedValues.geometry_category ?? "NEUTRAL"
   };
 
   const chain = {
@@ -90,7 +89,7 @@ Math exists only as:
 * Validation
 
 ==================================================
-5. OUTPUT CONSTRAINTS (JSON ONLY)
+5. OUTPUT CONTRACT — INTERPRETATION ONLY
 ==================================================
 You MUST output exactly one JSON object matching the provided schema.
 
@@ -99,10 +98,11 @@ Rules:
 * JSON must match the provided schema exactly.
 * NO markdown inside JSON.
 * NO commentary before or after JSON.
-* Strings must be concise and concrete.
-* Numbers must align with inputs.
-* The "agent_insights" fields must contain the debate text for each agent.
-* The "george_verdict" fields must contain George's audit results.
+* Return ONLY the five agent_insights fields.
+* Do NOT emit mathematical signals.
+* Do NOT emit a George verdict.
+* Do NOT invent or modify computed values.
+* The computed values supplied below are authoritative inputs for interpretation.
 
 ==================================================
 6. ANTI-HALLUCINATION PROTOCOL
@@ -113,10 +113,9 @@ If any of the following occur:
 * Schema uncertainty
 * Over-optimistic reasoning
 Then:
-* George MUST flag it.
-* Hallucination score must increase.
-* Panic/glitch mode may be activated.
-* Conservative recommendations are required.
+* Keep the interpretation conservative and evidence-bound.
+* Do not invent data, math, signals, or audit results.
+* The external GEORGE layer will perform the shadow audit.
 
 ==================================================
 7. PANIC / GLITCH MODE
@@ -144,14 +143,18 @@ but to demonstrate:
 * Real-world viability
 
 ==================================================
-9. FINAL AUTHORITY
+9. EXTERNAL AUDIT AUTHORITY
 ==================================================
+GEORGE is an external audit layer executed after this response.
+
 George’s verdict overrides:
 * Agent optimism
 * Narrative elegance
 * Futuristic ambition
 
-If George says it fails, it fails. Results must be reflected in the "george_verdict" JSON object.
+Do NOT generate George’s verdict yourself.
+Do NOT include george_verdict in the model response.
+The external audit layer owns the final verdict.
 
 ==================================================
 INPUT DATA (NON-NEGOTIABLE)
@@ -162,8 +165,7 @@ INPUT DATA (NON-NEGOTIABLE)
 Computed Signals:
 - Resonant Frequency (Hz): ${signals.frequencyHz}
 - Coordination Index (0–1): ${signals.coordinationIndex}
-- Stability Score (0–100): ${signals.stabilityScore}%
-- Colinearity Score: ${computedValues.colinearity_score || 0}
+- Colinearity Score: ${computedValues.colinearity_score ?? 0}
 - Geometry Category: ${signals.geometryCategory}
 
 Chain Context:

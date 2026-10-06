@@ -4,8 +4,8 @@
  */
 
 /**
- * Builds a geometric object based on AI-debated signals and math invariants.
- * @param {Object} signals - The output_signals and input_analysis from the payload.
+ * Builds a geometric object from authoritative deterministic signals.
+ * Gemini interpretation is not used as a source of visual parameters.
  */
 export function buildMandalaGeometry({
   geometryType,
@@ -91,13 +91,15 @@ function resolveRenderHint(geometryType) {
  * @param {Object} finalPayload - The full audited system payload.
  */
 export function renderMandala(ctx, finalPayload) {
-  const { debate, input_analysis } = finalPayload;
-  const signals = debate?.output_signals;
+  const {
+    authoritative_signals,
+    input_analysis
+  } = finalPayload;
 
   const geometry = buildMandalaGeometry({
-    geometryType: signals?.geometry || "STANDARD",
-    frequencyHz: signals?.frequency_hz || 432,
-    crossRatio: input_analysis?.cross_ratio || 1.0,
+    geometryType: authoritative_signals?.geometry_category,
+    frequencyHz: authoritative_signals?.frequency_hz,
+    crossRatio: authoritative_signals?.cross_ratio,
     colinearity: input_analysis?.colinearity
   });
 

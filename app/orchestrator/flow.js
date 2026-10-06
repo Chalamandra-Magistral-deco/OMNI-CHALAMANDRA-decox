@@ -8,7 +8,10 @@
 import { runGeminiDebate } from "../agents/geminiAgent.js";
 import { auditWithGeorge } from "../agents/GeorgeAgent.js";
 import { calculateCrossRatio } from "../canvas/crossRatio.js";
-import { analyzeColinearity } from "../canvas/colinearityGuide.js";
+import {
+  analyzeColinearity,
+  projectPointsToBaseline
+} from "../canvas/colinearityGuide.js";
 import { computeInvariantSignals } from "../config/invariantConfig.js";
 import { validateContract } from "../utils/validate-contract.js";
 
@@ -16,10 +19,23 @@ export async function orchestrateOMNI(points) {
   console.log(">> OMNI: Initiating reasoning sequence...");
 
   // 1. Deterministic Geometric Analysis
-  const crossRatio = calculateCrossRatio(points);
   const colinearity = analyzeColinearity(points);
 
-  // Use the central Invariant Engine for stability signals
+  // Human click input cannot be expected to be mathematically exact.
+  // Accept sufficiently aligned input, then canonicalize it deterministically
+  // before calculating the authoritative projective invariant.
+  const MIN_INPUT_ALIGNMENT = 0.99;
+
+  if (colinearity.alignmentScore < MIN_INPUT_ALIGNMENT) {
+    throw new Error(
+      `OMNI: four points are insufficiently aligned; alignment=${colinearity.alignmentScore}`
+    );
+  }
+
+  const normalizedPoints = projectPointsToBaseline(points);
+  const crossRatio = calculateCrossRatio(normalizedPoints);
+
+  // The Invariant Engine is authoritative for derived signals.
   const signals = computeInvariantSignals(crossRatio);
 
   const inputPayload = {
@@ -28,7 +44,6 @@ export async function orchestrateOMNI(points) {
     computedValues: {
       frequency_hz: signals.frequency_hz,
       coordination_index: signals.coordination_index,
-      stability_score: signals.stability_score,
       geometry_category: signals.geometry_category,
       colinearity_score: colinearity.alignmentScore
     },
@@ -39,7 +54,7 @@ export async function orchestrateOMNI(points) {
     }
   };
 
-  // 2. Generative Reasoning Layer (Gemini 3 Pro)
+  // 2. Generative Reasoning Layer (Gemini 3.8 Flash)
   const debate = await runGeminiDebate(inputPayload);
 
   // 3. Shadow Audit Layer (GEORGE)
@@ -54,7 +69,13 @@ export async function orchestrateOMNI(points) {
       points: points,
       colinearity: colinearity
     },
-    debate: debate, // Contains agent_insights, george_verdict, and output_signals
+    authoritative_signals: {
+      cross_ratio: signals.cross_ratio,
+      frequency_hz: signals.frequency_hz,
+      coordination_index: signals.coordination_index,
+      geometry_category: signals.geometry_category
+    },
+    debate: debate, // Gemini interpretation only
     george_verdict: auditResults.george_verdict,
     chain_data: {
       current_hash: inputPayload.hashChain.current,
